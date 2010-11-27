@@ -6,7 +6,7 @@ compile=false
 objdep=false
 exe=a.out
 
-while getopts vcmdx o; do
+while getopts vcmdx: o; do
   case "$o" in
     v) verbose=true;;
     c) clean=true;;
