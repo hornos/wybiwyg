@@ -6,7 +6,7 @@ compile=false
 objdep=false
 exe=a.out
 
-while getopts vcmd o; do
+while getopts vcmdx o; do
   case "$o" in
     v) verbose=true;;
     c) clean=true;;
@@ -32,7 +32,6 @@ fi
 for am in ./build/*.arch.make ; do
   bin_name=${am%%.arch.make}
   ln -sf ${am} ./arch.make
-#  cp ${am} ./arch.make
 
   echo
   echo "[$actions] ${bin_name}"
@@ -70,4 +69,3 @@ for am in ./build/*.arch.make ; do
   fi
 done
 echo
-
