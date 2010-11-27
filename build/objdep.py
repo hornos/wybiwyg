@@ -14,10 +14,6 @@ import ConfigParser
 from optparse import OptionParser
 
 
-### defaults
-comp_cmd="$(FC) $(FFLAGS) $(INCLUDES)"
-
-
 ### cmd args
 opt_parser  = OptionParser()
 
@@ -25,6 +21,16 @@ opt_parser.add_option( "-o", "--output",
                        action = "store", type = "string",
                        dest = "output", default = 'Makefile.objdep',
                        help = "Output Makefile" )
+
+opt_parser.add_option( "-c", "--compiler",
+                       action = "store", type = "string",
+                       dest = "comp_cmd", default = '$(FC) $(FFLAGS) $(INCLUDES)',
+                       help = "Compiler" )
+
+opt_parser.add_option( "-x", "--suffix",
+                       action = "store", type = "string",
+                       dest = "suffix", default = '.F',
+                       help = "Suffix" )
 
 opt_parser.add_option( "-f", "--fex",
                        action = "store", type = "string",
@@ -45,6 +51,12 @@ opt_parser.add_option( "-d", "--debug",
                         action = "store_true",
                         dest = "debug", default = False,
                         help = "Debug verbose" )
+
+opt_parser.add_option( "-i", "--implicit",
+                        action = "store_true",
+                        dest = "implicit", default = False,
+                        help = "Do not include compiler line" )
+
 ### process args
 (options, args) = opt_parser.parse_args()
 debug     = options.debug
@@ -52,6 +64,9 @@ src_pat   = options.src_pat
 root_path = options.root_path
 fex_arr   = options.fex_arr.split(":")
 output    = options.output
+comp_cmd  = options.comp_cmd
+suffix    = options.suffix
+implicit  = options.implicit
 
 ### lookup tables
 obj_db = {}
@@ -143,12 +158,16 @@ for root, dirs, files in os.walk( root_path ):
         # module
         pat = re.compile( "^MODULE +.*$", re.IGNORECASE )
         if re.match( pat, line ):
-          tmp = line.split()
-          if tmp[1] in modules:
-            print "ERROR: MODULE",tmp[1]
-          else:
-            modules.append( tmp[1] )
-            mod_db[tmp[1]] = fon
+          pat = re.compile("^MODULE +PROCEDURE.*$", re.IGNORECASE )
+          if not re.match( pat, line ):
+            tmp = line.split()
+            if tmp[1] in modules:
+              print "ERROR: module defined",fbn,":",line
+            else:
+              modules.append( tmp[1] )
+              mod_db[tmp[1]] = fon
+            # end if
+          # end if
         # end if
 
         pat = re.compile( "^USE +.*$", re.IGNORECASE )
@@ -163,8 +182,9 @@ for root, dirs, files in os.walk( root_path ):
         if re.match( pat, line ):
           tmp = line.split()
           tmp[1] = re.sub( "\"", "", tmp[1] )
-          if not tmp[1] in includes:
-            includes.append( root+"/"+tmp[1] )
+          inc = root+"/"+tmp[1]
+          if not inc in includes:
+            includes.append( inc )
         # end if
       # end for line
 
@@ -206,7 +226,9 @@ srcs = []
 
 for obj in obj_db:
   dep = []
-  dep.append( obj_db[obj]["opath"] )
+
+  pp_opath = re.sub( "\.[\w]+$", suffix, obj_db[obj]["opath"] )
+  dep.append( pp_opath )
 
   objs.append( obj )
   srcs.append( obj_db[obj]["opath"] )
@@ -225,16 +247,18 @@ for obj in obj_db:
   dep_str = brkstr( dep )
   MF.write( obj + " : " + dep_str + "\n" )
 
-  # prepare compilation command
-  ccmd = comp_cmd
-  if "rule_fc" in obj_db[obj]:
-    ccmd = ccmd.replace( "$(FC)", obj_db[obj]["rule_fc"] )
-  if "rule_fflags" in obj_db[obj]:
-    ccmd = ccmd.replace( "$(FFLAGS)", obj_db[obj]["rule_fflags"] )
-  if "rule_includes" in obj_db[obj]:
-    ccmd = ccmd.replace( "$(INCLUDES)", obj_db[obj]["rule_includes"] )
+  if not implicit:
+    # prepare compilation command
+    ccmd = comp_cmd
+    if "rule_fc" in obj_db[obj]:
+      ccmd = ccmd.replace( "$(FC)", obj_db[obj]["rule_fc"] )
+    if "rule_fflags" in obj_db[obj]:
+      ccmd = ccmd.replace( "$(FFLAGS)", obj_db[obj]["rule_fflags"] )
+    if "rule_includes" in obj_db[obj]:
+      ccmd = ccmd.replace( "$(INCLUDES)", obj_db[obj]["rule_includes"] )
 
-  MF.write( "\t"+ccmd+" -c "+obj_db[obj]["opath"]+" -o "+obj+"\n" )
+    MF.write( "\t"+ccmd+" -c "+obj_db[obj]["opath"]+" -o "+obj+"\n" )
+  # end if
 # end for
 
 MF.write( "\n\n### MiSC ###\n" )
