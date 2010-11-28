@@ -31,6 +31,9 @@ fi
 
 for am in ./build/*.arch.make ; do
   bin_name=${am%%.arch.make}
+  bin_name=$(basename ${bin_name})
+  bin_name="build/bin/${bin_name}"
+
   ln -sf ${am} ./arch.make
 
   echo
@@ -62,7 +65,7 @@ for am in ./build/*.arch.make ; do
 
   if ${compile} ; then
     if test -x ./${exe} ; then
-      mv -f ./${exe} ${bin_name}
+      mv -f ./${exe} ./${bin_name}
     else
       echo "Error compiling ${bin_name}"
     fi
