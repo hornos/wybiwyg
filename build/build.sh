@@ -5,6 +5,7 @@ clean=false
 compile=false
 objdep=false
 exe=a.out
+bindir="./bin"
 
 while getopts vcmdx: o; do
   case "$o" in
@@ -15,6 +16,11 @@ while getopts vcmdx: o; do
     x) exe=$OPTARG;;
   esac
 done
+
+
+if ! test -d ${bindir} ; then
+  mkdir ${bindir}
+fi
 
 cd ..
 
