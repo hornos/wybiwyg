@@ -78,5 +78,8 @@ for am in ./build/*.arch.make ; do
       echo "Error compiling ${bin_name}"
     fi
   fi
+  if ${clean} ; then
+    rm -f ./arch.make
+  fi
 done
 echo
