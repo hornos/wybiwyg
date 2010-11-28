@@ -18,8 +18,10 @@ while getopts vcmdx: o; do
 done
 
 
-if ! test -d ${bindir} ; then
-  mkdir ${bindir}
+if ${compile} ; then
+  if ! test -d ${bindir} ; then
+    mkdir ${bindir}
+  fi
 fi
 
 cd ..
