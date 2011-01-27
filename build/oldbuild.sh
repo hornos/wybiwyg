@@ -1,43 +1,30 @@
 #!/bin/bash
 
 verbose=false
-clean=true
-compile=true
+clean=false
+compile=false
 objdep=false
 exe=a.out
-target_dir="current"
+bindir="./bin"
 
-usage="\n$(basename ${0}) will build the target(s)\n\n"
-usage="${usage}Options:\n -h help\n -v verbose\n -c make clean"
-usage="${usage}\n -m run make\n -d make object dependency"
-usage="${usage}\n -x binary name"
-usage="${usage}\n -t target directory (${target_dir})\n"
-
-# options
-while getopts hvcmdx:t: o; do
+while getopts vcmdx: o; do
   case "$o" in
-    h) echo -e "${usage}"; exit 1;;
     v) verbose=true;;
     c) clean=true;;
     m) compile=true;;
     d) objdep=true;;
     x) exe=$OPTARG;;
-    t) target_dir=$OPTARG;;
   esac
 done
-bin_dir="${target_dir}/bin"
 
 
 if ${compile} ; then
-  if ! test -d ${bin_dir} ; then
-    mkdir ${bin_dir}
+  if ! test -d ${bindir} ; then
+    mkdir ${bindir}
   fi
 fi
 
-# directory change
 cd ..
-target_dir="./build/${target_dir}"
-bin_dir="${target_dir}/bin"
 
 actions=""
 if ${clean} ; then
@@ -50,10 +37,10 @@ if ${compile} ; then
   actions="${actions}COMPILE"
 fi
 
-for am in ${target_dir}/*.arch.make ; do
+for am in ./build/*.arch.make ; do
   bin_name=${am%%.arch.make}
   bin_name=$(basename ${bin_name})
-  bin_name="${bin_dir}/${bin_name}"
+  bin_name="build/bin/${bin_name}"
 
   ln -sf ${am} ./arch.make
 
