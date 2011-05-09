@@ -1,8 +1,8 @@
 #!/bin/bash
 
 verbose=false
-clean=true
-compile=true
+clean=false
+compile=false
 objdep=false
 exe=a.out
 target_dir="current"
